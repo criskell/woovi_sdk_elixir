@@ -45,7 +45,16 @@ defmodule WooviSdk.Client do
         headers \\ [],
         opts \\ []
       ) do
-    endpoint_url = api_url <> path
+    query_params = Keyword.get(opts, :query_params, [])
+
+    query_string =
+      if query_params == [] do
+        ""
+      else
+        "?" <> URI.encode_query(query_params)
+      end
+
+    endpoint_url = api_url <> path <> query_string
 
     headers = [
       {"Content-Type", "application/json"},
@@ -107,7 +116,7 @@ defmodule WooviSdk.Client do
   @doc """
   Sends a **PATCH** request to the Woovi API.
   """
-  @spec patch(Config.t(), String.t(), body(), HttpClient.headers(), keyword()) ::
+  @spec patch(Config.t(), String.t(), body(), HttpClient.headquery_paramsers(), keyword()) ::
           sdk_response(any())
   def patch(config, path, body, headers \\ [], opts \\ []) do
     request(config, "PATCH", path, body, headers, opts)
