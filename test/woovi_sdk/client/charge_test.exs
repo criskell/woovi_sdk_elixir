@@ -1,26 +1,274 @@
 defmodule WooviSdk.Client.ChargeTest do
-  use ExUnit.Case, async: true
+  use WooviSdk.ApiCase, async: true
   import Mox
+  import WooviSdk.Test.HttpMockHelpers
 
-  alias WooviSdk.{Config, HttpClientMock}
   alias WooviSdk.Client.Charge
 
-  @config %Config{access_token: "test_token", api_url: "https://api.woovi.com"}
-
-  test "create/2 returns success" do
+  test "create/2 returns full charge response", %{config: config} do
     payload = %{
-      "correlationID" => "correlationID",
-      "value" => 1000
+      "correlationID" => "9134e286-6f71-427a-bf00-241681624587",
+      "value" => 100,
+      "comment" => "good",
+      "customer" => %{
+        "name" => "Dan",
+        "taxID" => "31324227036",
+        "email" => "email0@example.com",
+        "phone" => "5511999999999"
+      },
+      "additionalInfo" => [
+        %{
+          "key" => "Product",
+          "value" => "Pencil"
+        },
+        %{
+          "key" => "Invoice",
+          "value" => "18476"
+        },
+        %{
+          "key" => "Order",
+          "value" => "302"
+        }
+      ]
     }
 
-    HttpClientMock
-    |> expect(:request, fn "POST", "https://api.woovi.com/v1/charges", _headers, body, _opts ->
-      assert payload == Jason.decode!(body)
+    response = %{
+      "charge" => %{
+        "status" => "ACTIVE",
+        "customer" => %{
+          "name" => "Dan",
+          "email" => "email0@example.com",
+          "phone" => "5511999999999",
+          "taxID" => %{
+            "taxID" => "31324227036",
+            "type" => "BR:CPF"
+          }
+        },
+        "value" => 100,
+        "comment" => "good",
+        "correlationID" => "9134e286-6f71-427a-bf00-241681624586",
+        "paymentLinkID" => "7777a23s-6f71-427a-bf00-241681624586",
+        "paymentLinkUrl" => "https://woovi.com/pay/9134e286-6f71-427a-bf00-241681624586",
+        "qrCodeImage" =>
+          "https://api.woovi.com/openpix/charge/brcode/image/9134e286-6f71-427a-bf00-241681624586.png",
+        "expiresIn" => 2_592_000,
+        "expiresDate" => "2021-04-01T17:28:51.882Z",
+        "createdAt" => "2021-03-02T17:28:51.882Z",
+        "updatedAt" => "2021-03-02T17:28:51.882Z",
+        "brCode" =>
+          "000201010212261060014br.gov.bcb.pix2584https://api.woovi.com/openpix/testing?transactionID=867ba5173c734202ac659721306b38c952040000530398654040.015802BR5909LOCALHOST6009Sao Paulo62360532867ba5173c734202ac659721306b38c963044BCA",
+        "additionalInfo" => [
+          %{
+            "key" => "Product",
+            "value" => "Pencil"
+          },
+          %{
+            "key" => "Invoice",
+            "value" => "18476"
+          },
+          %{
+            "key" => "Order",
+            "value" => "302"
+          }
+        ],
+        "paymentMethods" => %{
+          "pix" => %{
+            "method" => "PIX_COB",
+            "transactionID" => "9134e286-6f71-427a-bf00-241681624586",
+            "identifier" => "9134e286-6f71-427a-bf00-241681624586",
+            "additionalInfo" => [],
+            "fee" => 50,
+            "value" => 200,
+            "status" => "ACTIVE",
+            "txId" => "9134e286-6f71-427a-bf00-241681624586",
+            "brCode" =>
+              "000201010212261060014br.gov.bcb.pix2584https://api.woovi.com/openpix/testing?transactionID=867ba5173c734202ac659721306b38c952040000530398654040.015802BR5909LOCALHOST6009Sao Paulo62360532867ba5173c734202ac659721306b38c963044BCA",
+            "qrCodeImage" =>
+              "https://api.woovi.com/openpix/charge/brcode/image/9134e286-6f71-427a-bf00-241681624586.png"
+          }
+        }
+      }
+    }
 
-      {:ok,
-       %{status: 201, body: Jason.encode!(%{"correlationID" => "correlationID"}), headers: []}}
-    end)
+    mock_request(
+      :post,
+      "/api/v1/charge",
+      payload,
+      status: 201,
+      body: response
+    )
 
-    assert {:ok, %{"correlationID" => "correlationID"}} = Charge.create(@config, payload)
+    assert {:ok, _} = Charge.create(config, payload)
+  end
+
+  test "delete/2 deletes a charge successfully", %{config: config} do
+    charge_id = "fe7834b4060c488a9b0f89811be5f5cf"
+
+    response = %{
+      "status" => "OK",
+      "id" => "fe7834b4060c488a9b0f89811be5f5cf"
+    }
+
+    mock_request(
+      :delete,
+      "/v1/charge/#{charge_id}",
+      nil,
+      status: 200,
+      body: response
+    )
+
+    assert {:ok, _} = Charge.delete(config, charge_id)
+  end
+
+  test "get/2 returns charge data", %{config: config} do
+    charge_id = "fe7834b4060c488a9b0f89811be5f5cf"
+
+    response = %{
+      "charge" => %{
+        "status" => "ACTIVE",
+        "customer" => %{
+          "name" => "Dan",
+          "email" => "email0@example.com",
+          "phone" => "5511999999999",
+          "taxID" => %{
+            "taxID" => "31324227036",
+            "type" => "BR:CPF"
+          }
+        },
+        "value" => 100,
+        "comment" => "good",
+        "correlationID" => "9134e286-6f71-427a-bf00-241681624586",
+        "paymentLinkID" => "7777-6f71-427a-bf00-241681624586",
+        "paymentLinkUrl" => "https://woovi.com/pay/9134e286-6f71-427a-bf00-241681624586",
+        "globalID" => "Q2hhcmdlOjcxOTFmMWIwMjA0NmJmNWY1M2RjZmEwYg==",
+        "qrCodeImage" =>
+          "https://api.woovi.com/openpix/charge/brcode/image/9134e286-6f71-427a-bf00-241681624586.png",
+        "brCode" =>
+          "000201010212261060014br.gov.bcb.pix2584https://api.woovi.com/openpix/testing?transactionID=867ba5173c734202ac659721306b38c952040000530398654040.015802BR5909LOCALHOST6009Sao Paulo62360532867ba5173c734202ac659721306b38c963044BCA",
+        "additionalInfo" => [
+          %{
+            "key" => "Product",
+            "value" => "Pencil"
+          },
+          %{
+            "key" => "Invoice",
+            "value" => "18476"
+          },
+          %{
+            "key" => "Order",
+            "value" => "302"
+          }
+        ],
+        "expiresIn" => 2_592_000,
+        "expiresDate" => "2021-04-01T17:28:51.882Z",
+        "createdAt" => "2021-03-02T17:28:51.882Z",
+        "updatedAt" => "2021-03-02T17:28:51.882Z",
+        "paymentMethods" => %{
+          "pix" => %{
+            "method" => "PIX_COB",
+            "transactionID" => "9134e286-6f71-427a-bf00-241681624586",
+            "identifier" => "9134e286-6f71-427a-bf00-241681624586",
+            "additionalInfo" => [],
+            "fee" => 50,
+            "value" => 200,
+            "status" => "ACTIVE",
+            "txId" => "9134e286-6f71-427a-bf00-241681624586",
+            "brCode" =>
+              "000201010212261060014br.gov.bcb.pix2584https://api.woovi.com/openpix/testing?transactionID=867ba5173c734202ac659721306b38c952040000530398654040.015802BR5909LOCALHOST6009Sao Paulo62360532867ba5173c734202ac659721306b38c963044BCA",
+            "qrCodeImage" =>
+              "https://api.woovi.com/openpix/charge/brcode/image/9134e286-6f71-427a-bf00-241681624586.png"
+          }
+        }
+      }
+    }
+
+    mock_request(
+      :get,
+      "/api/v1/charge/#{charge_id}",
+      nil,
+      status: 200,
+      body: response
+    )
+
+    assert {:ok, _} = Charge.get(config, charge_id)
+  end
+
+  test "list/2 returns charge list with items and page info", %{config: config} do
+    response = %{
+      "pageInfo" => %{
+        "skip" => 0,
+        "limit" => 10,
+        "totalCount" => 1,
+        "hasPreviousPage" => false,
+        "hasNextPage" => false
+      },
+      "charges" => [
+        %{
+          "status" => "ACTIVE",
+          "customer" => %{
+            "name" => "Dan",
+            "email" => "email0@example.com",
+            "phone" => "5511999999999",
+            "taxID" => %{
+              "taxID" => "31324227036",
+              "type" => "BR:CPF"
+            }
+          },
+          "value" => 100,
+          "comment" => "good",
+          "correlationID" => "9134e286-6f71-427a-bf00-241681624586",
+          "paymentLinkID" => "7777a23s-6f71-427a-bf00-241681624586",
+          "paymentLinkUrl" => "https://woovi.com/pay/9134e286-6f71-427a-bf00-241681624586",
+          "qrCodeImage" =>
+            "https://api.woovi.com/openpix/charge/brcode/image/9134e286-6f71-427a-bf00-241681624586.png",
+          "brCode" =>
+            "000201010212261060014br.gov.bcb.pix2584https://api.woovi.com/openpix/testing?transactionID=867ba5173c734202ac659721306b38c952040000530398654040.015802BR5909LOCALHOST6009Sao Paulo62360532867ba5173c734202ac659721306b38c963044BCA",
+          "additionalInfo" => [
+            %{
+              "key" => "Product",
+              "value" => "Pencil"
+            },
+            %{
+              "key" => "Invoice",
+              "value" => "18476"
+            },
+            %{
+              "key" => "Order",
+              "value" => "302"
+            }
+          ],
+          "expiresIn" => 2_592_000,
+          "expiresDate" => "2021-04-01T17:28:51.882Z",
+          "createdAt" => "2021-03-02T17:28:51.882Z",
+          "updatedAt" => "2021-03-02T17:28:51.882Z",
+          "paymentMethods" => %{
+            "pix" => %{
+              "method" => "PIX_COB",
+              "transactionID" => "9134e286-6f71-427a-bf00-241681624586",
+              "identifier" => "9134e286-6f71-427a-bf00-241681624586",
+              "additionalInfo" => [],
+              "fee" => 50,
+              "value" => 200,
+              "status" => "ACTIVE",
+              "txId" => "9134e286-6f71-427a-bf00-241681624586",
+              "brCode" =>
+                "000201010212261060014br.gov.bcb.pix2584https://api.woovi.com/openpix/testing?transactionID=867ba5173c734202ac659721306b38c952040000530398654040.015802BR5909LOCALHOST6009Sao Paulo62360532867ba5173c734202ac659721306b38c963044BCA",
+              "qrCodeImage" =>
+                "https://api.woovi.com/openpix/charge/brcode/image/9134e286-6f71-427a-bf00-241681624586.png"
+            }
+          }
+        }
+      ]
+    }
+
+    mock_request(:get, "/api/v1/charge", nil, status: 200, body: response)
+
+    assert {:ok, %{"charges" => charges, "pageInfo" => page_info}} = Charge.list(config)
+
+    assert length(charges) == 1
+
+    assert hd(charges)["status"] == "ACTIVE"
+    assert page_info["limit"] == 10
+    assert page_info["totalCount"] == 1
   end
 end
