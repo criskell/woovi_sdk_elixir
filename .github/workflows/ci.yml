@@ -33,8 +33,5 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-mix-
 
-      - name: Compile
-        run: mix compile
-
       - name: Run tests
         run: mix test
