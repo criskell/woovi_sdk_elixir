@@ -84,4 +84,13 @@ defmodule WooviSdk.Client.Charge do
   defp validate_qr_code_size(size) when size < 600, do: {:error, "qr code size must be >= 600"}
   defp validate_qr_code_size(size) when size > 4096, do: {:error, "qr code size must be <= 4096"}
   defp validate_qr_code_size(_size), do: :ok
+
+  @doc """
+  Edit expiration date of a charge
+  """
+  @spec patch(Config.t(), String.t(), Charge.patch_payload()) ::
+          Client.sdk_response(Charge.patch_response())
+  def patch(%Config{} = config, charge_id, data) do
+    Client.patch(config, "/api/v1/charge/#{charge_id}", data)
+  end
 end
