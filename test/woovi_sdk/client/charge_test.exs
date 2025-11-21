@@ -113,7 +113,6 @@ defmodule WooviSdk.Client.ChargeTest do
       :delete,
       "/api/v1/charge/#{charge_id}",
       nil,
-      status: 200,
       body: response
     )
 
@@ -186,7 +185,6 @@ defmodule WooviSdk.Client.ChargeTest do
       :get,
       "/api/v1/charge/#{charge_id}",
       nil,
-      status: 200,
       body: response
     )
 
@@ -261,7 +259,7 @@ defmodule WooviSdk.Client.ChargeTest do
       ]
     }
 
-    mock_request(:get, "/api/v1/charge", nil, status: 200, body: response)
+    mock_request(:get, "/api/v1/charge", nil, body: response)
 
     assert {:ok, %{"charges" => charges, "pageInfo" => page_info}} = Charge.list(config)
 
@@ -278,7 +276,7 @@ defmodule WooviSdk.Client.ChargeTest do
     mock_request(
       :get,
       "/openpix/charge/brcode/image/charge-id.png",
-      image_binary,
+      nil,
       query_params: [size: "738"],
       body: image_binary,
       headers: [{"content-type", "image/png"}]
@@ -306,7 +304,7 @@ defmodule WooviSdk.Client.ChargeTest do
     mock_request(
       :get,
       "/api/image/qrcode/base64/charge-id",
-      response_body,
+      nil,
       query_params: [size: "738"],
       body: response_body,
       headers: [{"content-type", "image/png"}]
@@ -392,7 +390,6 @@ defmodule WooviSdk.Client.ChargeTest do
       :patch,
       "/api/v1/charge/charge-id",
       payload,
-      status: 200,
       body: response
     )
 

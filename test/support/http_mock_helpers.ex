@@ -4,6 +4,15 @@ defmodule WooviSdk.Test.HttpMockHelpers do
 
   alias WooviSdk.HttpClientMock
 
+  @doc """
+  Mock a request.
+
+  ## Parameters
+
+  - `method`: Expected method.
+  - `payload`: Expected payload sent to Woovi API.
+  - `opts`: Customize response.
+  """
   def mock_request(method, path, payload \\ nil, opts) do
     expect(HttpClientMock, :request, fn req_method, url, headers, body, _req_opts ->
       assert String.upcase(to_string(method)) == req_method
