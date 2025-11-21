@@ -57,22 +57,31 @@ defmodule WooviSdk.Client.Charge do
   @doc """
   Download a QR code image.
   """
-  @spec qr_code_image(Config.t(), String.t(), integer()) :: {:ok, binary()} | {:error, term()}
-  def qr_code_image(%Config{} = config, id, size \\ 700) when is_integer(size) do
-    cond do
-      size < 600 ->
-        {:error, "qr code size must be >= 600"}
+  @spec download_qr_code_image(Config.t(), String.t(), integer()) :: Client.sdk_response(binary())
+  def download_qr_code_image(%Config{} = config, id, size \\ 1024) when is_integer(size) do
+    path = "/openpix/charge/brcode/image/#{id}.png"
 
-      size > 4096 ->
-        {:error, "qr code size must be <= 4096"}
-
-      true ->
-        path = "/openpix/charge/brcode/image/#{id}.png"
-
-        with {:ok, %{body: body}} <-
-               Client.get(config, path, [accept: "image/png"], query_params: [size: size]) do
-          {:ok, body}
-        end
+    with :ok <- validate_qr_code_size(size),
+         {:ok, body} <-
+           Client.get(config, path, [accept: ["image/png"]], query_params: [size: size]) do
+      {:ok, body}
     end
   end
+
+  @doc """
+  Get a base64 encoded QR Code image from a charge.
+  """
+  @spec get_qr_code_base64_encoded(Config.t(), String.t(), integer()) ::
+          Client.sdk_response(String.t())
+  def get_qr_code_base64_encoded(%Config{} = config, id, size \\ 1024) when is_integer(size) do
+    with :ok <- validate_qr_code_size(size),
+         {:ok, %{"imageBase64" => imageBase64}} <-
+           Client.get(config, "/api/image/qrcode/base64/#{id}", [], query_params: [size: size]) do
+      {:ok, imageBase64}
+    end
+  end
+
+  defp validate_qr_code_size(size) when size < 600, do: {:error, "qr code size must be >= 600"}
+  defp validate_qr_code_size(size) when size > 4096, do: {:error, "qr code size must be <= 4096"}
+  defp validate_qr_code_size(_size), do: :ok
 end

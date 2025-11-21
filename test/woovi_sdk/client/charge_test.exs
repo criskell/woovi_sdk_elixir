@@ -272,28 +272,55 @@ defmodule WooviSdk.Client.ChargeTest do
     assert page_info["totalCount"] == 1
   end
 
-  test "qr_code_image/3 returns image binary", %{config: config} do
+  test "download_qr_code_image/3 returns image binary", %{config: config} do
     image_binary = <<1, 2, 3, 4, 5>>
 
     mock_request(
       :get,
-      "/openpix/charge/brcode/image/abc123.png",
-      nil,
+      "/openpix/charge/brcode/image/charge-id.png",
+      image_binary,
       query_params: [size: "738"],
       body: image_binary,
       headers: [{"content-type", "image/png"}]
     )
 
-    assert {:ok, ^image_binary} = Charge.qr_code_image(config, "abc123", 738)
+    assert {:ok, ^image_binary} = Charge.download_qr_code_image(config, "charge-id", 738)
   end
 
-  test "qr_code_image/3 errors when size < 600", %{config: config} do
-    assert {:error, msg} = Charge.qr_code_image(config, "abc123", 500)
+  test "download_qr_code_image/3 errors when size < 600", %{config: config} do
+    assert {:error, msg} = Charge.download_qr_code_image(config, "charge-id", 500)
     assert msg =~ ">= 600"
   end
 
-  test "qr_code_image/3 errors when size > 4096", %{config: config} do
-    assert {:error, msg} = Charge.qr_code_image(config, "abc123", 5000)
+  test "download_qr_code_image/3 errors when size > 4096", %{config: config} do
+    assert {:error, msg} = Charge.download_qr_code_image(config, "charge-id", 5000)
+    assert msg =~ "<= 4096"
+  end
+
+  test "get_qr_code_base64_encoded/3 returns base64 encoded PNG image with data URL format", %{
+    config: config
+  } do
+    response_body = %{imageBase64: "image-base-64"}
+
+    mock_request(
+      :get,
+      "/api/image/qrcode/base64/charge-id",
+      response_body,
+      query_params: [size: "738"],
+      body: response_body,
+      headers: [{"content-type", "image/png"}]
+    )
+
+    assert {:ok, "image-base-64"} = Charge.get_qr_code_base64_encoded(config, "charge-id", 738)
+  end
+
+  test "get_qr_code_base64_encoded/3 errors when size < 600", %{config: config} do
+    assert {:error, msg} = Charge.get_qr_code_base64_encoded(config, "charge-id", 500)
+    assert msg =~ ">= 600"
+  end
+
+  test "get_qr_code_base64_encoded/3 errors when size > 4096", %{config: config} do
+    assert {:error, msg} = Charge.get_qr_code_base64_encoded(config, "charge-id", 5000)
     assert msg =~ "<= 4096"
   end
 end
