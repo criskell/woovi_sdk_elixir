@@ -9,11 +9,6 @@ defmodule WooviSdk.Resource.Customer do
         }
   defstruct [:name, :correlationID, :email, :phone, :taxID, :address]
 
-  @type customer_payload :: t()
-  @type customer_response :: %{
-          customer: t()
-        }
-
   @type address :: %{
           zipcode: String.t(),
           street: String.t(),
@@ -23,5 +18,16 @@ defmodule WooviSdk.Resource.Customer do
           state: String.t(),
           country: String.t(),
           complement: String.t()
+        }
+
+  @type customer_payload :: t()
+
+  @type customer_response :: %{
+          customer: t()
+        }
+
+  @type customer_list_response :: %{
+          required(:customers) => [t()],
+          required(:pageInfo) => map()
         }
 end
