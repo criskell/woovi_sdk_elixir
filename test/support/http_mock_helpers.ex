@@ -5,13 +5,14 @@ defmodule WooviSdk.Test.HttpMockHelpers do
   alias WooviSdk.HttpClientMock
 
   def mock_request(method, path, payload \\ nil, opts) do
-    expect(HttpClientMock, :request, fn req_method, url, _headers, body, req_opts ->
+    expect(HttpClientMock, :request, fn req_method, url, _headers, body, _req_opts ->
       assert String.upcase(to_string(method)) == req_method
 
-      assert url_ends_with?(url, path)
+      %URI{path: path_from_url, query: query_from_url} = URI.parse(url)
+      assert path_from_url == path
 
-      if query = opts[:query] do
-        assert Keyword.equal?(req_opts[:query], query)
+      if query = opts[:query_params] do
+        assert URI.encode_query(query) == query_from_url
       end
 
       if payload do
@@ -25,9 +26,5 @@ defmodule WooviSdk.Test.HttpMockHelpers do
          body: Jason.encode!(Keyword.get(opts, :body, %{}))
        }}
     end)
-  end
-
-  defp url_ends_with?(url, path) do
-    String.ends_with?(url, path)
   end
 end

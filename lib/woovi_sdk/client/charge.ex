@@ -53,4 +53,26 @@ defmodule WooviSdk.Client.Charge do
   def delete(%Config{} = config, id) do
     Client.delete(config, "/api/v1/charge/#{id}")
   end
+
+  @doc """
+  Download a QR code image.
+  """
+  @spec qr_code_image(Config.t(), String.t(), integer()) :: {:ok, binary()} | {:error, term()}
+  def qr_code_image(%Config{} = config, id, size \\ 700) when is_integer(size) do
+    cond do
+      size < 600 ->
+        {:error, "qr code size must be >= 600"}
+
+      size > 4096 ->
+        {:error, "qr code size must be <= 4096"}
+
+      true ->
+        path = "/openpix/charge/brcode/image/#{id}.png"
+
+        with {:ok, %{body: body}} <-
+               Client.get(config, path, [accept: "image/png"], query_params: [size: size]) do
+          {:ok, body}
+        end
+    end
+  end
 end

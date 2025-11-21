@@ -111,7 +111,7 @@ defmodule WooviSdk.Client.ChargeTest do
 
     mock_request(
       :delete,
-      "/v1/charge/#{charge_id}",
+      "/api/v1/charge/#{charge_id}",
       nil,
       status: 200,
       body: response
@@ -270,5 +270,30 @@ defmodule WooviSdk.Client.ChargeTest do
     assert hd(charges)["status"] == "ACTIVE"
     assert page_info["limit"] == 10
     assert page_info["totalCount"] == 1
+  end
+
+  test "qr_code_image/3 returns image binary", %{config: config} do
+    image_binary = <<1, 2, 3, 4, 5>>
+
+    mock_request(
+      :get,
+      "/openpix/charge/brcode/image/abc123.png",
+      nil,
+      query_params: [size: "738"],
+      body: image_binary,
+      headers: [{"content-type", "image/png"}]
+    )
+
+    assert {:ok, ^image_binary} = Charge.qr_code_image(config, "abc123", 738)
+  end
+
+  test "qr_code_image/3 errors when size < 600", %{config: config} do
+    assert {:error, msg} = Charge.qr_code_image(config, "abc123", 500)
+    assert msg =~ ">= 600"
+  end
+
+  test "qr_code_image/3 errors when size > 4096", %{config: config} do
+    assert {:error, msg} = Charge.qr_code_image(config, "abc123", 5000)
+    assert msg =~ "<= 4096"
   end
 end

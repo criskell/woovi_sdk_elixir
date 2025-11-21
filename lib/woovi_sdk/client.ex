@@ -116,7 +116,7 @@ defmodule WooviSdk.Client do
   @doc """
   Sends a **PATCH** request to the Woovi API.
   """
-  @spec patch(Config.t(), String.t(), body(), HttpClient.headquery_paramsers(), keyword()) ::
+  @spec patch(Config.t(), String.t(), body(), HttpClient.headers(), keyword()) ::
           sdk_response(any())
   def patch(config, path, body, headers \\ [], opts \\ []) do
     request(config, "PATCH", path, body, headers, opts)
