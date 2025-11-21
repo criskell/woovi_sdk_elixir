@@ -24,6 +24,6 @@ defmodule WooviSdk.Client.Transaction do
 
     query_params = opts |> Keyword.take(allowed) |> Enum.reject(fn {_k, v} -> is_nil(v) end)
 
-    Client.get(config, "/api/v1/transaction", nil, query_params: query_params)
+    Client.get(config, "/api/v1/transaction", [], query_params: query_params)
   end
 end
