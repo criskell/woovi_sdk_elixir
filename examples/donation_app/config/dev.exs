@@ -5,10 +5,11 @@ config :donation_app, DonationApp.Repo,
   username: "postgres",
   password: "postgres",
   hostname: "localhost",
-  database: "donation_app_dev",
+  database: "donation_app_db",
   stacktrace: true,
   show_sensitive_data_on_connection_error: true,
-  pool_size: 10
+  pool_size: 10,
+  port: 5433
 
 # For development, we disable any cache and enable
 # debugging and code reloading.
