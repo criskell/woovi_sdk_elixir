@@ -2,6 +2,7 @@ defmodule WooviSdk.Config do
   @moduledoc """
   Configuration for the Woovi SDK.
   """
+  alias WooviSdk.JsonLibraryJason
   alias WooviSdk.HttpClientFinch
 
   @api_url "https://api.woovi.com"
@@ -44,7 +45,7 @@ defmodule WooviSdk.Config do
   end
 
   def json_library do
-    Application.get_env(:woovi_sdk, :json_library, Jason)
+    Application.get_env(:woovi_sdk, :json_library, JsonLibraryJason)
   end
 
   def http_client do
