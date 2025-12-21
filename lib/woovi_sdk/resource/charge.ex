@@ -1,4 +1,6 @@
 defmodule WooviSdk.Resource.Charge do
+  alias WooviSdk.Resource.Customer
+
   @typedoc """
   Represents a specific charge.
 
@@ -17,10 +19,14 @@ defmodule WooviSdk.Resource.Charge do
   Fields:
         - `correlationID`: Correlation ID of charge.
         - `value`: Amount of charge.
+        - `comment`: Optional comment.
+        - `customer`: Customer data.
   """
   @type create_payload :: %{
           required(:correlationID) => String.t(),
-          required(:value) => integer()
+          required(:value) => integer(),
+          optional(:comment) => String.t(),
+          optional(:customer) => Customer.t()
         }
 
   @typedoc """

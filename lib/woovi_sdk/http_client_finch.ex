@@ -8,7 +8,11 @@ defmodule WooviSdk.HttpClientFinch do
 
   @impl true
   def child_spec do
-    Supervisor.child_spec({Finch, name: __MODULE__}, id: __MODULE__)
+    if Code.ensure_loaded?(Finch) do
+      Supervisor.child_spec({Finch, name: __MODULE__}, id: __MODULE__)
+    else
+      raise "Finch not available."
+    end
   end
 
   @impl true
@@ -20,18 +24,22 @@ defmodule WooviSdk.HttpClientFinch do
           keyword()
         ) :: HttpClient.response()
   def request(method, url, headers, body, opts \\ []) do
-    finch_name = Keyword.get(opts, :finch_name, WooviSdk.Finch)
+    if Code.ensure_loaded?(Finch) do
+      finch_name = Keyword.get(opts, :finch_name, __MODULE__)
 
-    request =
-      Finch.build(method, url, headers, body)
-      |> Finch.request(finch_name)
+      request =
+        Finch.build(method, url, headers, body)
+        |> Finch.request(finch_name)
 
-    case request do
-      {:ok, %Finch.Response{status: status, body: body, headers: headers}} ->
-        {:ok, %{status: status, body: body, headers: headers}}
+      case request do
+        {:ok, %{status: status, body: body, headers: headers}} ->
+          {:ok, %{status: status, body: body, headers: headers}}
 
-      {:error, reason} ->
-        {:error, reason}
+        {:error, reason} ->
+          {:error, reason}
+      end
+    else
+      {:error, :finch_not_available}
     end
   end
 end

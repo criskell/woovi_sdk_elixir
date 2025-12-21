@@ -1,13 +1,12 @@
 defmodule WooviSdk.Resource.Customer do
-  @type t :: %__MODULE__{
-          name: String.t(),
-          correlationID: String.t(),
-          email: String.t(),
-          phone: String.t(),
-          taxID: String.t(),
-          address: address()
+  @type t :: %{
+          optional(:name) => String.t(),
+          optional(:correlationID) => String.t(),
+          optional(:email) => String.t(),
+          optional(:phone) => String.t(),
+          optional(:taxID) => String.t(),
+          optional(:address) => address()
         }
-  defstruct [:name, :correlationID, :email, :phone, :taxID, :address]
 
   @type address :: %{
           zipcode: String.t(),

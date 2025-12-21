@@ -75,7 +75,7 @@ defmodule WooviSdk.Client do
       {:ok, %{status: status, body: response_body} = response} ->
         decoded =
           try do
-            Config.json_library().decode!(response_body)
+            Config.json_library().decode!(response_body, keys: :atoms)
           rescue
             _ -> response_body
           end

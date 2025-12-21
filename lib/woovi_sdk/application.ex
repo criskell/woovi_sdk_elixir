@@ -7,7 +7,7 @@ defmodule WooviSdk.Application do
     http_client = Config.http_client()
 
     children =
-      if function_exported?(http_client, :child_spec, 0) do
+      if function_exported?(Code.ensure_loaded!(http_client), :child_spec, 0) do
         [http_client.child_spec()]
       else
         []

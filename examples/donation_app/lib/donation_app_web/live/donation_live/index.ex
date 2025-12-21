@@ -4,6 +4,7 @@ defmodule DonationAppWeb.DonationLive.Index do
 
   alias DonationApp.Donations
   alias DonationApp.Donations.Donation
+  require Logger
 
   @impl true
   def mount(_params, _session, socket) do
@@ -12,7 +13,10 @@ defmodule DonationAppWeb.DonationLive.Index do
     {:ok,
      socket
      |> assign(:donations, Donations.list_donations())
-     |> assign(:form, to_form(changeset))}
+     |> assign(:form, to_form(changeset))
+     |> assign(:show_payment_modal, false)
+     |> assign(:qrcode_image_url, nil)
+     |> assign(:brcode, nil)}
   end
 
   @impl true
@@ -22,15 +26,25 @@ defmodule DonationAppWeb.DonationLive.Index do
       |> normalize_amount()
 
     case Donations.create_donation(params) do
-      {:ok, _donation} ->
+      {:ok, %{brcode: brcode, qrcode_image_url: qrcode_image_url}} ->
         {:noreply,
          socket
          |> put_flash(:info, "Doação criada com sucesso")
          |> assign(:donations, Donations.list_donations())
-         |> assign(:changeset, Donations.change_donation(%Donation{}))}
+         |> assign(:changeset, Donations.change_donation(%Donation{}))
+         |> assign(:show_payment_modal, true)
+         |> assign(:brcode, brcode)
+         |> assign(:qrcode_image_url, qrcode_image_url)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
         {:noreply, assign(socket, :changeset, changeset)}
+
+      {:error, {:payment_failed, error}} ->
+        Logger.error("Request while creating PIX charge: #{inspect(error, pretty: true)}", error)
+
+        {:noreply,
+         socket
+         |> put_flash(:error, "Erro ao criar cobrança PIX")}
     end
   end
 
@@ -48,6 +62,11 @@ defmodule DonationAppWeb.DonationLive.Index do
       {:error, _changeset} ->
         {:noreply, put_flash(socket, :error, "Erro ao excluir doação")}
     end
+  end
+
+  @impl true
+  def handle_event("close_qrcode", _params, socket) do
+    {:noreply, assign(socket, :show_payment_modal, false)}
   end
 
   defp normalize_amount(params) do
@@ -125,6 +144,13 @@ defmodule DonationAppWeb.DonationLive.Index do
           required
         />
 
+        <.input
+          field={@form[:tax_id]}
+          type="text"
+          label="CPF/CNPJ"
+          required
+        />
+
         <div class="mt-4">
           <.button>Salvar</.button>
         </div>
@@ -132,7 +158,56 @@ defmodule DonationAppWeb.DonationLive.Index do
 
       <div>
         <h2 class="text-xl font-semibold mb-2">Lista de doações</h2>
+
         {render_donations(assigns)}
+
+        <%= if @show_payment_modal do %>
+          <div class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+              <div class="flex justify-between items-center mb-4">
+                <h3 class="text-xl font-bold text-gray-900">Envie o pagamento via PIX</h3>
+                <button phx-click="close_qrcode" class="text-gray-500 hover:text-gray-700">
+                  ×
+                </button>
+              </div>
+
+              <div class="text-center space-y-4">
+                <p class="text-gray-600">Escaneie o QR Code abaixo para realizar o pagamento</p>
+
+                <div class="flex justify-center p-4 bg-gray-50 rounded">
+                  <img src={@qrcode_image_url} alt="QR Code Pix" class="w-64 h-64" />
+                </div>
+
+                <div class="space-y-2">
+                  <p class="text-sm text-gray-600">Ou copie o código PIX:</p>
+
+                  <div class="flex gap-2">
+                    <input
+                      type="text"
+                      value={@brcode}
+                      readonly
+                      class="flex-1 px-3 py-2 border rounded text-sm bg-gray-50 text-gray-600"
+                    />
+
+                    <button
+                      onclick={"navigator.clipboard.writeText('#{@brcode}')"}
+                      class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    >
+                      Copiar
+                    </button>
+                  </div>
+                </div>
+
+                <button
+                  phx-click="close_qrcode"
+                  class="w-full mt-4 px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                >
+                  Fechar
+                </button>
+              </div>
+            </div>
+          </div>
+        <% end %>
       </div>
     </div>
     """

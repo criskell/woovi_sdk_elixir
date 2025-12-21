@@ -5,7 +5,7 @@ defmodule WooviSdk.Config do
   alias WooviSdk.HttpClientFinch
 
   @api_url "https://api.woovi.com"
-  @sandbox_api_url "https://api-sandbox.woovi.com"
+  @sandbox_api_url "https://api.woovi-sandbox.com"
 
   @type t :: %__MODULE__{
           access_token: String.t(),

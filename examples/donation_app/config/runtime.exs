@@ -1,4 +1,10 @@
 import Config
+import Dotenvy
+
+source!([Path.absname(".env"), System.get_env()], require_files: [Path.absname(".env")])
+
+config :donation_app, :woovi_sdk_token,
+  env!("WOOVI_SDK_TOKEN")
 
 # config/runtime.exs is executed for all environments, including
 # during releases. It is executed after compilation and before the

@@ -15,13 +15,13 @@ defmodule DonationApp.MixProject do
     ]
   end
 
-  # Configuration for the OTP application.
   #
   # Type `mix help compile.app` for more information.
+  # Configuration for the OTP application.
   def application do
     [
       mod: {DonationApp.Application, []},
-      extra_applications: [:logger, :runtime_tools]
+      extra_applications: [:logger, :runtime_tools, :woovi_sdk]
     ]
   end
 
@@ -65,7 +65,10 @@ defmodule DonationApp.MixProject do
       {:gettext, "~> 0.26"},
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
-      {:bandit, "~> 1.5"}
+      {:bandit, "~> 1.5"},
+      {:finch, "~> 0.20"},
+      {:woovi_sdk, path: "../.."},
+      {:dotenvy, "~> 1.0.0"}
     ]
   end
 

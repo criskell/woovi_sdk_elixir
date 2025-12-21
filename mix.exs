@@ -21,7 +21,7 @@ defmodule WooviSdk.MixProject do
 
   defp deps do
     [
-      {:finch, "~> 0.20", only: :test},
+      {:finch, "~> 0.20", optional: true},
       {:jason, "~> 1.4", only: :test},
       {:mox, "~> 1.0", only: :test}
     ]
