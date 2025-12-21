@@ -1,13 +1,21 @@
 defmodule DonationAppWeb.Payment.WooviWebhookController do
   use DonationAppWeb, :controller
 
+  alias WooviSdk.Webhook
+  alias DonationAppWeb.Plugs.CacheBodyReader
   alias DonationAppWeb.Endpoint
   alias DonationApp.Donations
 
   def receive_webhook(conn, params) do
-    event = params["evento"] || params["event"]
+    raw_body = CacheBodyReader.get_raw_body(conn)
 
-    handle_webhook(conn, event, params)
+    if !Webhook.valid?(raw_body, get_req_header(conn, "x-webhook-signature") |> List.first()) do
+      conn |> send_resp(:not_found, "")
+    else
+      event = params["evento"] || params["event"]
+
+      handle_webhook(conn, event, params)
+    end
   end
 
   def handle_webhook(conn, "teste_webhook", _params) do
