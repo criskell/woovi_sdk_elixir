@@ -79,6 +79,21 @@ defmodule DonationAppWeb.DonationLive.Index do
   end
 
   @impl true
+  def handle_event("clear_form", _, socket) do
+    {:noreply, assign(socket, :form, to_form(Donations.change_donation(%Donation{})))}
+  end
+
+  @impl true
+  def handle_event("validate", %{"donation" => params}, socket) do
+    changeset =
+      %Donation{}
+      |> Donations.change_donation(params)
+      |> Map.put(:action, :validate)
+
+    {:noreply, assign(socket, :form, to_form(changeset))}
+  end
+
+  @impl true
   def handle_info(%{event: "payment_confirmed"}, socket) do
     {:noreply,
      socket
@@ -139,6 +154,19 @@ defmodule DonationAppWeb.DonationLive.Index do
 
   @impl true
   def render(assigns) do
+    IO.inspect(
+      ~H"""
+      <.input
+        field={@form[:name]}
+        type="text"
+        label="Nome do doador"
+        required
+      />
+      """
+      |> Phoenix.HTML.html_escape()
+      |> Phoenix.HTML.safe_to_string()
+    )
+
     ~H"""
     <div class="mx-auto max-w-2xl p-6 space-y-8">
       <h1 class="text-2xl font-bold">Doações</h1>
@@ -148,6 +176,7 @@ defmodule DonationAppWeb.DonationLive.Index do
       <.form
         for={@form}
         phx-submit="save"
+        phx-change="validate"
       >
         <.input
           field={@form[:name]}
@@ -172,9 +201,11 @@ defmodule DonationAppWeb.DonationLive.Index do
         />
 
         <div class="mt-4">
-          <.button>Salvar</.button>
+          <.button>Doar</.button>
         </div>
       </.form>
+
+      <.button phx-click="clear_form">Limpar</.button>
 
       <div>
         <h2 class="text-xl font-semibold mb-2">Lista de doações</h2>
