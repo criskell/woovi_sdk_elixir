@@ -25,7 +25,7 @@ defmodule DonationApp.Donations do
            Woovi.config()
            |> Charge.create(%{
              correlationID: correlation_id,
-             value: 1,
+             value: attrs["amount_cents"],
              comment: "Donation",
              customer: %{
                name: donation.name,
@@ -50,5 +50,13 @@ defmodule DonationApp.Donations do
 
   def delete_donation(%Donation{} = donation) do
     Repo.delete(donation)
+  end
+
+  def confirm_donation(correlation_id) do
+    donation = Repo.get_by!(Donation, correlation_id: correlation_id)
+
+    donation
+    |> Donation.changeset(%{status: "paid"})
+    |> Repo.update()
   end
 end

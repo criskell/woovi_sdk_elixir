@@ -22,9 +22,11 @@ defmodule DonationAppWeb.Router do
   end
 
   # Other scopes may use custom stacks.
-  # scope "/api", DonationAppWeb do
-  #   pipe_through :api
-  # end
+  scope "/api", DonationAppWeb do
+    pipe_through :api
+
+    post "/woovi/callback", Payment.WooviWebhookController, :receive_webhook
+  end
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:donation_app, :dev_routes) do

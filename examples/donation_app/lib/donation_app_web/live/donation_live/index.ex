@@ -7,13 +7,12 @@ defmodule DonationAppWeb.DonationLive.Index do
   require Logger
 
   @impl true
+  @spec mount(any(), any(), map()) :: {:ok, map()}
   def mount(_params, _session, socket) do
-    changeset = Donations.change_donation(%Donation{})
-
     {:ok,
      socket
      |> assign(:donations, Donations.list_donations())
-     |> assign(:form, to_form(changeset))
+     |> assign(:form, to_form(Donations.change_donation(%Donation{})))
      |> assign(:show_payment_modal, false)
      |> assign(:qrcode_image_url, nil)
      |> assign(:brcode, nil)}
@@ -26,18 +25,28 @@ defmodule DonationAppWeb.DonationLive.Index do
       |> normalize_amount()
 
     case Donations.create_donation(params) do
-      {:ok, %{brcode: brcode, qrcode_image_url: qrcode_image_url}} ->
+      {:ok, %{donation: donation, brcode: brcode, qrcode_image_url: qrcode_image_url}} ->
+        if connected?(socket) do
+          Phoenix.PubSub.subscribe(
+            DonationApp.PubSub,
+            "donation:#{donation.id}"
+          )
+        end
+
         {:noreply,
          socket
          |> put_flash(:info, "Doação criada com sucesso")
          |> assign(:donations, Donations.list_donations())
-         |> assign(:changeset, Donations.change_donation(%Donation{}))
+         |> assign(
+           :form,
+           to_form(Donations.change_donation(%Donation{}))
+         )
          |> assign(:show_payment_modal, true)
          |> assign(:brcode, brcode)
          |> assign(:qrcode_image_url, qrcode_image_url)}
 
       {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign(socket, :changeset, changeset)}
+        {:noreply, assign(socket, :form, to_form(changeset))}
 
       {:error, {:payment_failed, error}} ->
         Logger.error("Request while creating PIX charge: #{inspect(error, pretty: true)}", error)
@@ -67,6 +76,17 @@ defmodule DonationAppWeb.DonationLive.Index do
   @impl true
   def handle_event("close_qrcode", _params, socket) do
     {:noreply, assign(socket, :show_payment_modal, false)}
+  end
+
+  @impl true
+  def handle_info(%{event: "payment_confirmed"}, socket) do
+    {:noreply,
+     socket
+     |> put_flash(:info, "Doação confirmada com sucesso! Obrigado!")
+     |> assign(:show_payment_modal, false)
+     |> assign(:brcode, nil)
+     |> assign(:qrcode_image_url, nil)
+     |> assign(:donations, Donations.list_donations())}
   end
 
   defp normalize_amount(params) do
