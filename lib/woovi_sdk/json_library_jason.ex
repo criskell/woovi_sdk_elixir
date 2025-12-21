@@ -1,5 +1,5 @@
 defmodule WooviSdk.JsonLibraryJason do
-  @doc false
+  @moduledoc false
 
   def encode!(input) do
     Jason.encode!(input)
