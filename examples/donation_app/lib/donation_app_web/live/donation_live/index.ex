@@ -154,19 +154,6 @@ defmodule DonationAppWeb.DonationLive.Index do
 
   @impl true
   def render(assigns) do
-    IO.inspect(
-      ~H"""
-      <.input
-        field={@form[:name]}
-        type="text"
-        label="Nome do doador"
-        required
-      />
-      """
-      |> Phoenix.HTML.html_escape()
-      |> Phoenix.HTML.safe_to_string()
-    )
-
     ~H"""
     <div class="mx-auto max-w-2xl p-6 space-y-8">
       <h1 class="text-2xl font-bold">Doações</h1>
