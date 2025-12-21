@@ -32,9 +32,9 @@ defmodule WooviSdk.Webhook do
   end
 
   defp decode_signature(signature) do
-    case Base.decode64(signature) do
+    case !!signature and Base.decode64(signature) do
       {:ok, binary} -> {:ok, binary}
-      :error -> {:error, :invalid_signature}
+      _ -> {:error, :invalid_signature}
     end
   end
 end
