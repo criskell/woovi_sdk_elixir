@@ -27,11 +27,11 @@ defmodule WooviSdk.HttpClientFinch do
     if Code.ensure_loaded?(Finch) do
       finch_name = Keyword.get(opts, :finch_name, __MODULE__)
 
-      request =
+      response =
         Finch.build(method, url, headers, body)
         |> Finch.request(finch_name)
 
-      case request do
+      case response do
         {:ok, %{status: status, body: body, headers: headers}} ->
           {:ok, %{status: status, body: body, headers: headers}}
 
