@@ -24,10 +24,8 @@ defmodule WooviSdk.Test.HttpMockHelpers do
         assert URI.encode_query(query) == query_from_url
       end
 
-      content_type = headers |> List.keyfind("Content-Type", 0, "")
-      is_json = payload && content_type == "application/json"
-
-      if is_json do
+      with {_, "application/json"} when not is_nil(payload) <-
+             headers |> List.keyfind("Content-Type", 0, "") do
         assert payload == Jason.decode!(body)
       end
 
